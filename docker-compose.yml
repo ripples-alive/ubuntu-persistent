@@ -1,0 +1,13 @@
+services:
+  ubuntu:
+    image: registry.dqwang.space/dqwang/ubuntu-persistent:24.04
+    build: .
+    command: bash
+    volumes:
+      - ./data:/data
+      - ./data/etc:/etc
+      - ./data/home:/home
+      - ./data/opt:/opt
+      - ./data/root:/root
+      - ./data/usr:/usr
+      - ./data/var:/var
