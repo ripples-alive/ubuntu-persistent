@@ -1,16 +1,17 @@
 FROM busybox:musl AS busybox
 
-FROM ubuntu:24.04
+FROM phusion/baseimage:noble-1.0.0
 
 # Install dependencies
-RUN apt-get update && apt-get install -y \
+RUN install_clean \
     btop \
     build-essential \
     cmake \
     cron \
-    curl  \
+    curl \
     debian-keyring \
     dnsutils \
+    file \
     g++ \
     gcc \
     git \
@@ -32,11 +33,12 @@ RUN apt-get update && apt-get install -y \
     silversearcher-ag \
     socat \
     software-properties-common \
+    sudo \
     tmux \
     trash-cli \
     tzdata \
-    wget \
     vim \
+    wget \
     zsh
 
 # Install tailscale
@@ -44,25 +46,25 @@ RUN curl -fsSL https://tailscale.com/install.sh | sh
 
 # Config timezone
 ENV TZ=Asia/Shanghai
-RUN ln -nsf /usr/share/zoneinfo/$TZ /etc/localtime && echo $TZ > /etc/timezone
 
-# Config locale
-RUN locale-gen en_US.UTF-8 && update-locale
-ENV LANG=en_US.UTF-8
-ENV LC_ALL=en_US.UTF-8
+# Enable sshd
+RUN rm -f /etc/service/sshd/down
 
-# Permit root login for ssh
-RUN sed -i 's/^#\(PermitRootLogin\) .*/\1 yes/' /etc/ssh/sshd_config \
-    && sed -i 's/^\(UsePAM yes\)/# \1/' /etc/ssh/sshd_config
+# Add tailscale service
+COPY service/tailscale /etc/service/tailscale
+
+# Set sudo without password
+RUN sed -i 's/\(^%sudo.*\)ALL$/\1NOPASSWD:ALL/' /etc/sudoers
 
 # Prepare template
-RUN mkdir /template && rsync -al /etc /home /opt /root /usr /var /template/ && touch /template/.inited
-COPY --from=busybox /bin/busybox /template/bin/
+RUN mkdir /template && rsync -al /etc /home /opt /root /usr /var /template/
+COPY --from=busybox /bin/busybox /template/usr/bin/
 
 # Config entrypoint
 COPY entrypoint.sh /
-ENTRYPOINT ["/template/bin/busybox", "sh", "/entrypoint.sh"]
+ENTRYPOINT ["/template/usr/bin/busybox", "sh", "/entrypoint.sh"]
 
 EXPOSE 22
 
-CMD ["sleep", "infinity"]
+# Use baseimage-docker's init system.
+CMD ["/sbin/my_init"]

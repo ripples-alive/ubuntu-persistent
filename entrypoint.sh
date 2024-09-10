@@ -1,20 +1,25 @@
 #!/bin/sh
 
-if [ ! -f /data/.inited ]; then
-  echo "init from template"
-  /template/bin/busybox ln -sf /template/usr/lib64 /usr/
-  /template/bin/busybox ln -sf /template/usr/lib /usr/
-  /template/bin/busybox ln -sf /template/usr/bin /usr/
-  rsync -al --delete /template/ /data
+DATA_DIR=/data
+TEMPLATE_DIR=/template
+BUSYBOX=$TEMPLATE_DIR/usr/bin/busybox
 
-  echo "root:${ROOT_PASSWORD}" | chpasswd
+if [ ! "$($BUSYBOX ls -A $DATA_DIR/usr)" ]; then
+  echo "Copying system files from template"
+  $BUSYBOX ln -sf $TEMPLATE_DIR/usr/bin /usr/
+  $BUSYBOX ln -sf $TEMPLATE_DIR/usr/lib /usr/
+  $BUSYBOX ln -sf $TEMPLATE_DIR/usr/lib64 /usr/
+  rsync -al --delete --exclude=/root --exclude=/home $TEMPLATE_DIR/ $DATA_DIR/
+
+  if [ ! "$(ls -A $DATA_DIR/root)" ]; then
+    echo "Copying root directory from template"
+    rsync -al $TEMPLATE_DIR/root/ $DATA_DIR/root/
+  fi
+
+  if [ ! "$(ls -A $DATA_DIR/home)" ]; then
+    echo "Copying home directory from template"
+    rsync -al $TEMPLATE_DIR/home/ $DATA_DIR/home/
+  fi
 fi
-
-tailscaled -tun userspace-networking &
-
-mkdir -p /run/sshd
-sshd -D -e &
-
-cron -f -P &
 
 exec "$@"
