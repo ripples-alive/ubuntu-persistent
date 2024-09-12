@@ -36,6 +36,7 @@ RUN install_clean \
     sudo \
     tmux \
     trash-cli \
+    tree \
     tzdata \
     vim \
     wget \
