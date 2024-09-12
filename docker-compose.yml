@@ -1,6 +1,6 @@
 services:
   ubuntu:
-    image: registry.dqwang.space/dqwang/ubuntu-persistent:24.04
+    image: registry.dqwang.space/ripples/ubuntu-persistent:24.04
     build: .
     volumes:
       - ./data:/data
