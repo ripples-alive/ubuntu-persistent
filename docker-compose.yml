@@ -4,6 +4,8 @@ services:
     build: .
     ports:
       - 10022:22
+    environment:
+      SSH_PUBKEY: ${SSH_PUBKEY}
     volumes:
       - ./data:/data
       - ./data/etc:/etc
