@@ -2,6 +2,8 @@ services:
   ubuntu:
     image: registry.dqwang.space/ripples/ubuntu-persistent:24.04
     build: .
+    ports:
+      - 10022:22
     volumes:
       - ./data:/data
       - ./data/etc:/etc
